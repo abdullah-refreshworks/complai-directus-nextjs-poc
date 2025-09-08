@@ -5,16 +5,20 @@ WORKDIR /app
 # Install additional required packages
 RUN apk add --no-cache libc6-compat python3 make g++
 
+# Build args for Next public envs
+ARG NEXT_PUBLIC_API_URL
+
 # Install dependencies first for better caching
 COPY package*.json ./
-RUN npm install
+# Use clean install for reproducible builds and include dev deps
+RUN npm ci --include=dev
 
 # Copy the rest of the application
 COPY . .
 
-# Set environment variables
-ENV NEXT_TELEMETRY_DISABLED 1
-ENV NODE_ENV production
+# Set environment variables (NODE_ENV left unset to keep dev deps available during build)
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
 # Build the application
 RUN npm run build
@@ -24,8 +28,8 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 
 # Set environment variables
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Copy necessary files from builder
 COPY --from=builder /app/public ./public

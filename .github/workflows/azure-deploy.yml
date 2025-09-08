@@ -48,6 +48,8 @@ jobs:
       with:
         context: ./apps/frontend
         file: ./apps/frontend/Dockerfile
+        build-args: |
+          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
         push: true
         tags: ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/frontend:${{ github.sha }}
 
