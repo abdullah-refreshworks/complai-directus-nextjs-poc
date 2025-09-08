@@ -1,0 +1,25 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Node
+node_modules/
+.next/
+out/
+
+# Build
+dist/
+build/
+
+# Docker
+docker-compose.override.yml
+
+# Directus
+uploads/
+extensions/
+/data/
+
+# System
+.DS_Store
+*.log
