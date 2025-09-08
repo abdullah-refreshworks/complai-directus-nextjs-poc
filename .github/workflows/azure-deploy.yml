@@ -47,13 +47,47 @@ jobs:
         tags: ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/frontend:${{ github.sha }}
 
     # Deploy to Azure Container Apps
-    - name: Deploy to Azure Container Apps
+    # Deploy Directus to Azure Container Apps
+    - name: Deploy Directus to Azure Container Apps
       uses: azure/container-apps-deploy-action@v1
       with:
         appSourcePath: ${{ github.workspace }}
         acrName: ${{ secrets.AZURE_REGISTRY_NAME }}
         acrUsername: ${{ secrets.AZURE_REGISTRY_USERNAME }}
         acrPassword: ${{ secrets.AZURE_REGISTRY_PASSWORD }}
-        containerAppName: complai-app
+        containerAppName: complai-directus
         resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP }}
-        dockerComposeFile: docker-compose.prod.yml
+        targetPort: 8055
+        ingress: external
+        image: ${{ secrets.AZURE_REGISTRY_LOGIN_SERVER }}/directus:${{ github.sha }}
+        env: |
+          KEY=${{ secrets.DIRECTUS_KEY }}
+          SECRET=${{ secrets.DIRECTUS_SECRET }}
+          ADMIN_EMAIL=${{ secrets.DIRECTUS_ADMIN_EMAIL }}
+          ADMIN_PASSWORD=${{ secrets.DIRECTUS_ADMIN_PASSWORD }}
+          DB_CLIENT=pg
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=5432
+          DB_DATABASE=${{ secrets.POSTGRES_DB }}
+          DB_USER=${{ secrets.POSTGRES_USER }}
+          DB_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          WEBSOCKETS_ENABLED=true
+          CORS_ENABLED=true
+          CORS_ORIGIN=*
+          PUBLIC_URL=https://complai-directus.agreeablemoss-9fe4373d.westeurope.azurecontainerapps.io
+
+    # Deploy Frontend to Azure Container Apps
+    - name: Deploy Frontend to Azure Container Apps
+      uses: azure/container-apps-deploy-action@v1
+      with:
+        appSourcePath: ./apps/frontend
+        acrName: ${{ secrets.AZURE_REGISTRY_NAME }}
+        acrUsername: ${{ secrets.AZURE_REGISTRY_USERNAME }}
+        acrPassword: ${{ secrets.AZURE_REGISTRY_PASSWORD }}
+        containerAppName: complai-frontend
+        resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP }}
+        targetPort: 3000
+        ingress: external
+        env: |
+          NODE_ENV=production
+          NEXT_PUBLIC_API_URL=https://complai-directus.agreeablemoss-9fe4373d.westeurope.azurecontainerapps.io
