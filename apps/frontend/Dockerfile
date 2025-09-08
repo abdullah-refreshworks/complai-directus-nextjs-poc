@@ -2,22 +2,35 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Install dependencies first for better caching
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
+# Copy the rest of the application
 COPY . .
+
+# Set environment variables
+ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV production
+
+# Build the application
 RUN npm run build
 
 FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-ENV NODE_ENV=production
+# Set environment variables
+ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED 1
 
+# Copy necessary files from builder
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
+# Expose the port
 EXPOSE 3000
 
+# Set the command
 CMD ["node", "server.js"]
